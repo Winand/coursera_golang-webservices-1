@@ -10,14 +10,19 @@ func main() {
 	// echo "hello" | go run main.go
 	// cat text.txt | go run main.go
 	in := bufio.NewScanner(os.Stdin)
-	alreadySeen := make(map[string]bool)
+	var prev string
 	for in.Scan() { //построчный ввод
 		txt := in.Text()
-		if _, found := alreadySeen[txt]; found {
+
+		if txt == prev {
 			continue
 		}
 
-		alreadySeen[txt] = true
+		if txt < prev {
+			panic("File not sorted: txt==" + txt + ", prev==" + prev)
+		}
+
+		prev = txt
 
 		fmt.Println(">>", txt)
 	}
