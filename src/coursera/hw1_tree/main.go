@@ -24,6 +24,7 @@ func listDir(out io.Writer, path string, prefix string, printFiles bool) error {
 		return fmt.Errorf("failed to read dir %v", path)
 	}
 	//------- filter out files ---
+	// https://stackoverflow.com/a/37563270
 	if !printFiles {
 		var filteredItems []fs.DirEntry
 		for _, item := range items {
