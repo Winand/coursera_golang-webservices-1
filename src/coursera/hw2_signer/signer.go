@@ -29,52 +29,6 @@ func ExecutePipeline(jobs ...job) {
 	wg.Wait()
 }
 
-func MD5(mu *sync.Mutex, s string) string {
-	// Вызывает DataSignerMd5 последовательно
-	mu.Lock()
-	defer mu.Unlock()
-	return DataSignerMd5(s)
-}
-
-func CRC32s(vals ...string) []string {
-	/* Вычисляет несколько значений CRC32 параллельно */
-	ch := make(chan string, 10)
-	var results []string
-	for _, v := range vals {
-		v := v
-		go func() {
-			ch <- DataSignerCrc32(v)
-		}()
-	}
-	count := 0
-	for v := range ch {
-		results = append(results, v)
-		count++
-		if count == len(vals) {
-			break
-		}
-	}
-	return results
-}
-
-func SingleHash_(in chan interface{}, out chan interface{}) {
-	wg := &sync.WaitGroup{}
-	mu := &sync.Mutex{}
-	for v := range in {
-		v := strconv.Itoa(v.(int))
-		// v := fmt.Sprint(v)
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			fmt.Println("!!!")
-			crcs := CRC32s(v, MD5(mu, v))
-			fmt.Println(crcs)
-			out <- crcs[0] + "~" + crcs[1]
-		}()
-	}
-	wg.Wait()
-}
-
 type Pair struct {
 	Idx int
 	Val string
@@ -82,9 +36,9 @@ type Pair struct {
 
 func SingleHash(in chan interface{}, out chan interface{}) {
 	var md5s []string
-	cursor := 0
 	ch1, ch2 := make(chan Pair), make(chan Pair)
 	// hash (parallel)
+	cursor := 0
 	for v := range in {
 		v := strconv.Itoa(v.(int))
 		md5s = append(md5s, DataSignerMd5(v))
@@ -112,23 +66,39 @@ func SingleHash(in chan interface{}, out chan interface{}) {
 
 func MultiHash(in chan interface{}, out chan interface{}) {
 	chParts := make(chan Pair)
+	// hash (parallel)
+	idx := 0
 	for v := range in {
-		result := ""
+		// fmt.Println("in", v)
 		for th := 0; th < 6; th++ {
 			th := th // Иначе в горутинах будет последнее значение
-			go func(idx int) {
-				chParts <- Pair{idx, DataSignerCrc32(fmt.Sprint(th, v))}
-			}(th)
+			v := v   //
+			go func(idxIn int) {
+				chParts <- Pair{idxIn*10 + th, DataSignerCrc32(fmt.Sprint(th, v))}
+			}(idx)
 		}
-		count := 0
-		for part := range chParts {
-			fmt.Println(part)
-			result += part.Val
-			if count++; count == 6 {
-				break
-			}
+		idx++
+	}
+	// collect (1)
+	crcs := make(map[int]map[int]string)
+	count := 0
+	for part := range chParts {
+		// fmt.Println(part, part.Idx/10, part.Idx%10)
+		if crcs[part.Idx/10] == nil {
+			crcs[part.Idx/10] = make(map[int]string)
 		}
-		fmt.Println("out")
+		crcs[part.Idx/10][part.Idx%10] = part.Val
+		if count++; count == idx*6 {
+			break
+		}
+	}
+	// sort (2)
+	for i := 0; i < len(crcs); i++ {
+		result := ""
+		for el := 0; el < 6; el++ {
+			result += crcs[i][el]
+		}
+		// fmt.Println("out", i, result)
 		out <- result
 	}
 }
