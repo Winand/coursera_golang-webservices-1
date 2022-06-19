@@ -39,14 +39,20 @@ func SingleHash(in chan interface{}, out chan interface{}) {
 	ch1, ch2 := make(chan Pair), make(chan Pair)
 	// hash (parallel)
 	cursor := 0
+	mu := &sync.RWMutex{}
 	for v := range in {
 		v := strconv.Itoa(v.(int))
+		mu.Lock()
 		md5s = append(md5s, DataSignerMd5(v))
+		mu.Unlock()
 		go func(curs int) {
 			ch1 <- Pair{curs, DataSignerCrc32(v)}
 		}(cursor)
 		go func(curs int) {
-			ch2 <- Pair{curs, DataSignerCrc32(md5s[curs])}
+			mu.RLock()
+			md5v := md5s[curs]
+			mu.RUnlock() // если использовать defer, то заблокируется канал
+			ch2 <- Pair{curs, DataSignerCrc32(md5v)}
 		}(cursor)
 		cursor++
 	}
