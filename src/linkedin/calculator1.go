@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"math"
 	"os"
 	"strconv"
 	"strings"
@@ -11,7 +12,9 @@ import (
 func main() {
 	val1 := readFloat("Input 1st value")
 	val2 := readFloat("Input 2st value")
-	fmt.Printf("Sum is %v\n", val1+val2)
+	// 88.6 + 76.3 = 164.89999999999998
+	result := math.Round((val1+val2)*100) / 100
+	fmt.Printf("Sum is %v\n", result)
 }
 
 func readFloat(prompt string) float64 {
