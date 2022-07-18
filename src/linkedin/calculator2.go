@@ -10,25 +10,43 @@ import (
 )
 
 func main() {
-	var op string
 	var result float64
 	v1 := readFloat("Value 1")
 	v2 := readFloat("Value 2")
 	fmt.Print("Select an operation (+ - * /): ")
-	_, _ = fmt.Scanln(&op)
-	switch op {
+	switch op := readChar(); op {
 	case "+":
-		result = v1 + v2
+		result = add(v1, v2)
 	case "-":
-		result = v1 - v2
+		result = subtract(v1, v2)
 	case "*":
-		result = v1 * v2
+		result = multiply(v1, v2)
 	case "/":
-		result = v1 / v2
+		result = divide(v1, v2)
 	default:
 		panic(fmt.Sprintf("Unknown operation %v\n", op))
 	}
 	fmt.Printf("The result is %v\n", math.Round(result*100)/100)
+}
+
+func add(v1, v2 float64) float64 {
+	// Adds two values
+	return v1 + v2
+}
+
+func subtract(v1, v2 float64) float64 {
+	// Subtracts one value from another
+	return v1 - v2
+}
+
+func multiply(v1, v2 float64) float64 {
+	// Multiplies two values
+	return v1 + v2
+}
+
+func divide(v1, v2 float64) float64 {
+	// Divides one value by another
+	return v1 / v2
 }
 
 func readFloat(prompt string) float64 {
@@ -41,4 +59,15 @@ func readFloat(prompt string) float64 {
 		panic(fmt.Sprintf("Wrong input %v!", str))
 	}
 	return ret
+}
+
+func readChar() string {
+	// Read one character string
+	var inp string
+	_, _ = fmt.Scanln(&inp)
+	inp = strings.TrimSpace(inp)
+	if len(inp) != 1 {
+		panic(fmt.Sprintf("Expected one char, got '%v'!", inp))
+	}
+	return inp
 }
