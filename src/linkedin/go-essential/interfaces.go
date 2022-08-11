@@ -2,13 +2,14 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"strings"
 )
 
 // Capper implements io.Writer and turns everything to uppercase
 type Capper struct {
-	output *os.File
+	output io.Writer
 }
 
 func (c Capper) Write(p []byte) (n int, err error) {
@@ -20,6 +21,7 @@ func (c Capper) Write(p []byte) (n int, err error) {
 }
 
 func main() {
+	//   ⬐ Why?
 	c := &Capper{os.Stdout}
 	fmt.Fprintln(c, "Hello there")
 }
