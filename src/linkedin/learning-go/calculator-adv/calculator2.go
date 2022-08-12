@@ -41,7 +41,7 @@ func subtract(v1, v2 float64) float64 {
 
 func multiply(v1, v2 float64) float64 {
 	// Multiplies two values
-	return v1 + v2
+	return v1 * v2
 }
 
 func divide(v1, v2 float64) float64 {
