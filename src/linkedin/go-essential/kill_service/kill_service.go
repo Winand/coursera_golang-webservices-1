@@ -6,6 +6,8 @@ import (
 	"os"
 	"strconv"
 	"strings"
+
+	"github.com/pkg/errors"
 )
 
 func killServer(pidFile string) error {
@@ -19,14 +21,17 @@ func killServer(pidFile string) error {
 	// Max uint32 is 4`294`967`295 https://stackoverflow.com/a/6878625/1119602
 	pid, err := strconv.ParseUint(str, 0, 32)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "Invalid pid")
 	}
 	fmt.Printf("killing server with pid=%d\n", pid)
+	if err := os.Remove(pidFile); err != nil {
+		log.Printf("Warning: Failed to remove file %s\n", pidFile)
+	}
 	return nil
 }
 
 func main() {
 	if err := killServer("server.pid"); err != nil {
-		log.Fatalf("error: %s", err)
+		log.Fatalf("error: %s", err) // Printf + os.Exit(1)
 	}
 }
