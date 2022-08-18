@@ -8,7 +8,7 @@ import (
 func returnType(url string, ch chan string) {
 	resp, err := http.Get(url)
 	if err != nil {
-		fmt.Printf("%s -> error: %s\n", url, err)
+		ch <- fmt.Sprintf("%s -> error: %s", url, err)
 		return
 	}
 
