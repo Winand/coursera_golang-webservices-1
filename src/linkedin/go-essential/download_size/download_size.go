@@ -24,37 +24,52 @@ var (
 	colors      = []string{"green", "yellow"}
 )
 
-func downloadSize(url string) (int, error) {
+type Size struct {
+	Size int
+	Err  error
+}
+
+func downloadSize(url string, ch chan Size) {
 	req, err := http.NewRequest(http.MethodHead, url, nil)
 	if err != nil {
-		return 0, err
+		ch <- Size{0, err}
+		return
 	}
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return 0, err
+		ch <- Size{0, err}
+		return
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return 0, fmt.Errorf(resp.Status)
+		ch <- Size{0, fmt.Errorf(resp.Status)}
+		return
 	}
 
-	return strconv.Atoi(resp.Header.Get("Content-Length"))
+	v, err := strconv.Atoi(resp.Header.Get("Content-Length"))
+	fmt.Printf("Got %d length of %s at %s\n", v, url, time.Now().Format("15:04:05.999"))
+	ch <- Size{v, err}
 }
 
 func main() {
+	// os.Setenv("https_proxy", "http://host.docker.internal:8888/")
 	start := time.Now()
 	size := 0
+	ch := make(chan Size, 1)
 	for month := 1; month <= 12; month++ {
 		for _, color := range colors {
 			url := fmt.Sprintf(urlTemplate, color, month)
-			fmt.Println(url)
-			n, err := downloadSize(url)
-			if err != nil {
-				log.Fatal(err)
-			}
-			size += n
+			go downloadSize(url, ch)
 		}
+	}
+	for i := 0; i < 12*len(colors); i++ {
+		sz := <-ch
+		n, err := sz.Size, sz.Err
+		if err != nil {
+			log.Fatal(err)
+		}
+		size += n
 	}
 
 	duration := time.Since(start)
