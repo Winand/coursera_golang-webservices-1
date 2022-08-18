@@ -56,7 +56,7 @@ func main() {
 	// os.Setenv("https_proxy", "http://host.docker.internal:8888/")
 	start := time.Now()
 	size := 0
-	ch := make(chan Size, 1)
+	ch := make(chan Size)
 	for month := 1; month <= 12; month++ {
 		for _, color := range colors {
 			url := fmt.Sprintf(urlTemplate, color, month)
