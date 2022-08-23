@@ -38,3 +38,11 @@ func TestMany(t *testing.T) {
 		})
 	}
 }
+
+func BenchmarkSqrt(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		v, err := Sqrt(float64(i))
+		require.NoError(b, err)
+		require.GreaterOrEqual(b, v, 0.0)
+	}
+}
