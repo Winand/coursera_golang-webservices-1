@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/url"
 )
 
 type User struct {
@@ -15,11 +16,14 @@ type User struct {
 }
 
 func userInfo(login string) (*User, error) {
-	resp, err := http.Get("https://api.github.com/users/" + login)
+	resp, err := http.Get("https://api.github.com/users/" + url.PathEscape(login))
 	if err != nil {
 		return nil, err
 	}
 	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf(resp.Status)
+	}
 	// io.Copy(os.Stdout, resp.Body)
 	dec := json.NewDecoder(resp.Body)
 	var user User
